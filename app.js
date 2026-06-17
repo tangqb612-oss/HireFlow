@@ -33,6 +33,8 @@ const baseCandidates = [
     email: "zhangchen@example.com",
     role: "前端工程师",
     source: "Boss 直聘",
+    createdAt: "2026-06-15",
+    updatedAt: "2026-06-17",
     stage: "待一面",
     schedule: "6 月 18 日 14:00",
     owner: "Alice",
@@ -60,6 +62,8 @@ const baseCandidates = [
     email: "lihang@example.com",
     role: "后端工程师",
     source: "企业微信推荐",
+    createdAt: "2026-06-16",
+    updatedAt: "2026-06-17",
     stage: "通过初筛",
     schedule: "面试时间待确认",
     owner: "Bob",
@@ -87,6 +91,8 @@ const baseCandidates = [
     email: "wangyuqing@example.com",
     role: "产品经理",
     source: "内推",
+    createdAt: "2026-06-03",
+    updatedAt: "2026-06-17",
     stage: "已发offer",
     schedule: "6 月 24 日入职",
     owner: "Carol",
@@ -114,6 +120,8 @@ const baseCandidates = [
     email: "zhaoyiming@example.com",
     role: "数据分析师",
     source: "拉勾",
+    createdAt: "2026-06-17",
+    updatedAt: "2026-06-17",
     stage: "简历待筛",
     schedule: "今日待处理",
     owner: "Alice",
@@ -139,6 +147,7 @@ const state = {
   roleFilter: "all",
   ownerFilter: "all",
   selectedCandidateId: "",
+  reportPeriod: "week",
   apiMode: window.location.protocol !== "file:",
 };
 
@@ -150,6 +159,11 @@ const dom = {
   parseStatus: document.querySelector("#parseStatus"),
   roleFilter: document.querySelector("#roleFilter"),
   ownerFilter: document.querySelector("#ownerFilter"),
+  reportPeriodBtns: document.querySelectorAll("[data-report-period]"),
+  reportMetrics: document.querySelector("#reportMetrics"),
+  reportStageBars: document.querySelector("#reportStageBars"),
+  reportOwnerBars: document.querySelector("#reportOwnerBars"),
+  reportSourceBars: document.querySelector("#reportSourceBars"),
   totalCandidates: document.querySelector("#totalCandidates"),
   pendingReview: document.querySelector("#pendingReview"),
   syncedCount: document.querySelector("#syncedCount"),
@@ -175,7 +189,7 @@ function setActiveNav(view) {
 }
 
 function setActiveView(view) {
-  dom.workspace.classList.remove("view-overview", "view-wechat", "view-ledger", "view-alerts", "view-talent");
+  dom.workspace.classList.remove("view-overview", "view-wechat", "view-ledger", "view-alerts", "view-reports", "view-talent");
   dom.workspace.classList.add(`view-${view}`);
   setActiveNav(view);
 }
@@ -405,6 +419,88 @@ function renderTalentPool() {
     : `<tr><td colspan="7" class="empty">暂无停止招聘流程的人才。可在候选人档案中勾选“停止该应聘者招聘流程”后保存。</td></tr>`;
 }
 
+function getPeriodStart(period) {
+  const now = new Date("2026-06-17T00:00:00");
+  if (period === "month") {
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  }
+  const day = now.getDay() || 7;
+  const start = new Date(now);
+  start.setDate(now.getDate() - day + 1);
+  return start;
+}
+
+function isInPeriod(dateText, period) {
+  const date = new Date(`${dateText}T00:00:00`);
+  return date >= getPeriodStart(period);
+}
+
+function countBy(items, key) {
+  return items.reduce((acc, item) => {
+    const value = item[key] || "未填写";
+    acc[value] = (acc[value] || 0) + 1;
+    return acc;
+  }, {});
+}
+
+function renderReportBars(target, entries) {
+  const max = Math.max(...entries.map(([, count]) => count), 1);
+  target.innerHTML = entries.length
+    ? entries
+        .map(
+          ([label, count]) => `
+            <div class="funnel-row">
+              <span>${label}</span>
+              <div class="bar-track">
+                <div class="bar-fill" style="width:${(count / max) * 100}%"></div>
+              </div>
+              <strong>${count}</strong>
+            </div>
+          `
+        )
+        .join("")
+    : `<div class="empty">当前周期暂无数据</div>`;
+}
+
+function renderReports() {
+  const period = state.reportPeriod;
+  const periodCandidates = state.candidates.filter((candidate) => isInPeriod(candidate.createdAt, period));
+  const periodUpdated = state.candidates.filter((candidate) => isInPeriod(candidate.updatedAt, period));
+  const stopped = periodUpdated.filter((candidate) => candidate.stopped).length;
+  const synced = periodUpdated.filter((candidate) => candidate.sync === "已同步").length;
+  const risks = periodUpdated.filter((candidate) => candidate.risk).length;
+  const offers = periodUpdated.filter((candidate) => candidate.stage === "已发offer" || candidate.stage === "已入职").length;
+
+  dom.reportMetrics.innerHTML = [
+    ["新增候选人", periodCandidates.length, "本周期 AI 结构化入库"],
+    ["推进/更新", periodUpdated.length, "阶段、档案或同步变更"],
+    ["Offer/入职", offers, "已发offer及已入职"],
+    ["终止进入储备", stopped, "转入人才储备库"],
+    ["已同步", synced, "写入台账状态"],
+    ["待处理风险", risks, "仍需 HR 确认"],
+  ]
+    .map(
+      ([label, value, desc]) => `
+        <article class="metric-card">
+          <span>${label}</span>
+          <strong>${value}</strong>
+          <p>${desc}</p>
+        </article>
+      `
+    )
+    .join("");
+
+  const stageEntries = stageOrder.map((stage) => [
+    stage,
+    stage === "终止"
+      ? periodUpdated.filter((candidate) => candidate.stopped).length
+      : periodUpdated.filter((candidate) => candidate.stage === stage && !candidate.stopped).length,
+  ]);
+  renderReportBars(dom.reportStageBars, stageEntries);
+  renderReportBars(dom.reportOwnerBars, Object.entries(countBy(periodUpdated, "owner")));
+  renderReportBars(dom.reportSourceBars, Object.entries(countBy(periodUpdated, "source")));
+}
+
 function setField(name, value) {
   const field = dom.candidateForm.elements[name];
   if (field) field.value = value || "";
@@ -529,6 +625,7 @@ function render() {
   renderAlerts(filtered);
   renderTable(filtered);
   renderTalentPool();
+  renderReports();
 }
 
 async function importMessages() {
@@ -565,6 +662,13 @@ async function importMessages() {
 dom.importBtn.addEventListener("click", importMessages);
 dom.navItems.forEach((item) => {
   item.addEventListener("click", () => showSection(item.dataset.view, item.dataset.target));
+});
+dom.reportPeriodBtns.forEach((button) => {
+  button.addEventListener("click", () => {
+    state.reportPeriod = button.dataset.reportPeriod;
+    dom.reportPeriodBtns.forEach((item) => item.classList.toggle("active", item === button));
+    renderReports();
+  });
 });
 dom.candidateRows.addEventListener("click", (event) => {
   const button = event.target.closest("[data-candidate-id]");

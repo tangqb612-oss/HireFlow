@@ -22,6 +22,7 @@
         <button class="nav-item" data-view="wechat" data-target="wechatMessages" title="查看企业微信群聊消息和 AI 抽取状态">企业微信消息</button>
         <button class="nav-item" data-view="ledger" data-target="documentLedger" title="查看模拟同步到腾讯在线文档的招聘台账">腾讯文档台账</button>
         <button class="nav-item" data-view="alerts" data-target="riskAlerts" title="查看缺字段、重复候选人等异常提醒">异常提醒</button>
+        <button class="nav-item" data-view="reports" data-target="reportsPanel" title="查看周度和月度招聘情况">招聘统计</button>
         <button class="nav-item" data-view="talent" data-target="talentPool" title="查看已停止招聘流程但保留档案的人才">人才储备库</button>
       </nav>
 
@@ -157,6 +158,54 @@
             <tbody id="talentRows"></tbody>
           </table>
         </div>
+      </section>
+
+      <section id="reportsPanel" class="reports-view">
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <span class="panel-label">招聘统计</span>
+              <h3>周度 / 月度招聘情况</h3>
+            </div>
+            <div class="segmented-control" aria-label="统计周期">
+              <button class="segment-btn active" data-report-period="week">周度</button>
+              <button class="segment-btn" data-report-period="month">月度</button>
+            </div>
+          </div>
+          <div id="reportMetrics" class="metrics-grid report-metrics"></div>
+        </article>
+
+        <section class="report-grid">
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <span class="panel-label">阶段分布</span>
+                <h3>招聘漏斗概览</h3>
+              </div>
+            </div>
+            <div id="reportStageBars" class="funnel"></div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <span class="panel-label">负责人</span>
+                <h3>HR 跟进量</h3>
+              </div>
+            </div>
+            <div id="reportOwnerBars" class="funnel"></div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <span class="panel-label">渠道</span>
+                <h3>候选人来源</h3>
+              </div>
+            </div>
+            <div id="reportSourceBars" class="funnel"></div>
+          </article>
+        </section>
       </section>
     </section>
   </main>

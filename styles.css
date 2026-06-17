@@ -255,16 +255,24 @@ select,
 .workspace.view-wechat .alerts-panel,
 .workspace.view-wechat .table-panel,
 .workspace.view-overview .talent-panel,
+.workspace.view-overview .reports-view,
 .workspace.view-ledger .metrics-grid,
 .workspace.view-ledger .main-grid,
 .workspace.view-ledger .talent-panel,
+.workspace.view-ledger .reports-view,
 .workspace.view-alerts .metrics-grid,
 .workspace.view-alerts .chat-panel,
 .workspace.view-alerts .funnel-panel,
 .workspace.view-alerts .table-panel,
+.workspace.view-alerts .reports-view,
+.workspace.view-reports .metrics-grid:not(.report-metrics),
+.workspace.view-reports .main-grid,
+.workspace.view-reports #documentLedger,
+.workspace.view-reports .talent-panel,
 .workspace.view-talent .metrics-grid,
 .workspace.view-talent .main-grid,
-.workspace.view-talent #documentLedger {
+.workspace.view-talent #documentLedger,
+.workspace.view-talent .reports-view {
   display: none;
 }
 
@@ -276,6 +284,46 @@ select,
 .workspace.view-ledger .table-panel,
 .workspace.view-talent .talent-panel {
   margin-top: 0;
+}
+
+.reports-view {
+  display: grid;
+  gap: 18px;
+}
+
+.report-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.report-metrics {
+  margin-bottom: 0;
+}
+
+.segmented-control {
+  display: inline-flex;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 3px;
+  background: #f6f9fc;
+}
+
+.segment-btn {
+  height: 32px;
+  border: 0;
+  border-radius: 6px;
+  padding: 0 12px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.segment-btn.active {
+  background: var(--primary);
+  color: #ffffff;
 }
 
 .panel {
