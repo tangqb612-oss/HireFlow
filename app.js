@@ -39,6 +39,7 @@ const baseCandidates = [
     tags: ["React 5 年", "重复合并"],
     sync: "已同步",
     risk: "duplicate",
+    todoStatus: "待处理",
     stopped: false,
     stopReason: "",
     evaluations: [
@@ -65,6 +66,7 @@ const baseCandidates = [
     tags: ["Java", "缺面试时间"],
     sync: "待确认",
     risk: "missing",
+    todoStatus: "待处理",
     stopped: false,
     stopReason: "",
     evaluations: [
@@ -91,6 +93,7 @@ const baseCandidates = [
     tags: ["Offer 跟进入职"],
     sync: "已同步",
     risk: "",
+    todoStatus: "已完成",
     stopped: false,
     stopReason: "",
     evaluations: [
@@ -117,6 +120,7 @@ const baseCandidates = [
     tags: ["缺联系电话", "待筛选"],
     sync: "待确认",
     risk: "missing",
+    todoStatus: "待处理",
     stopped: false,
     stopReason: "",
     evaluations: [
@@ -257,19 +261,23 @@ function renderFunnel(candidates) {
 
 function renderAlerts(candidates) {
   const alerts = candidates
-    .filter((candidate) => candidate.risk)
+    .filter((candidate) => candidate.risk && candidate.todoStatus !== "已完成")
     .map((candidate) => {
       if (candidate.risk === "duplicate") {
         return {
           level: "",
+          id: candidate.id,
+          type: candidate.risk,
           title: `${candidate.name} 可能重复建档`,
-          desc: "AI 已合并同名同岗位记录，并保留最新作品集补充信息。",
+          desc: "AI 发现同名同岗位记录，需要 HR 确认是否保留最新作品集信息并合并档案。",
         };
       }
       return {
         level: "danger",
+        id: candidate.id,
+        type: candidate.risk,
         title: `${candidate.name} 信息不完整`,
-        desc: "建议 HR 在企业微信中确认缺失字段后再同步为正式台账。",
+        desc: "需要 HR 补齐电话、面试时间等缺失字段，再同步为正式台账。",
       };
     });
 
@@ -280,6 +288,14 @@ function renderAlerts(candidates) {
             <div class="alert-item ${alert.level}">
               <strong>${alert.title}</strong>
               <p>${alert.desc}</p>
+              <div class="alert-actions">
+                <button class="small-btn" data-alert-action="open" data-candidate-id="${alert.id}">查看档案</button>
+                ${
+                  alert.type === "duplicate"
+                    ? `<button class="small-btn" data-alert-action="merge" data-candidate-id="${alert.id}">确认合并</button>`
+                    : `<button class="small-btn" data-alert-action="resolve" data-candidate-id="${alert.id}">确认已补齐</button>`
+                }
+              </div>
             </div>
           `
         )
@@ -436,9 +452,37 @@ function saveCandidate(event) {
     reason: dom.candidateForm.elements[`stageReason-${index}`].value.trim(),
   }));
 
+  if (candidate.risk === "missing" && candidate.phone && candidate.phone !== "待补充" && !candidate.schedule.includes("待确认")) {
+    resolveCandidateTodo(candidate.id, "resolve", false);
+  }
+
   renderFilters();
   render();
   closeCandidateDialog();
+}
+
+function resolveCandidateTodo(candidateId, action, shouldRender = true) {
+  const candidate = state.candidates.find((item) => item.id === candidateId);
+  if (!candidate) return;
+
+  if (action === "merge") {
+    candidate.tags = candidate.tags.filter((tag) => tag !== "重复合并");
+    candidate.tags.push("已确认合并");
+  }
+
+  if (action === "resolve") {
+    candidate.tags = candidate.tags.filter((tag) => !tag.includes("缺"));
+    candidate.tags.push("信息已确认");
+  }
+
+  candidate.risk = "";
+  candidate.todoStatus = "已完成";
+  candidate.sync = "已同步";
+
+  if (shouldRender) {
+    renderFilters();
+    render();
+  }
 }
 
 function render() {
@@ -480,6 +524,16 @@ dom.talentRows.addEventListener("click", (event) => {
   const button = event.target.closest("[data-candidate-id]");
   if (!button) return;
   openCandidateDialog(button.dataset.candidateId);
+});
+dom.alerts.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-alert-action]");
+  if (!button) return;
+  const action = button.dataset.alertAction;
+  if (action === "open") {
+    openCandidateDialog(button.dataset.candidateId);
+    return;
+  }
+  resolveCandidateTodo(button.dataset.candidateId, action);
 });
 dom.candidateForm.addEventListener("submit", saveCandidate);
 dom.closeDialogBtn.addEventListener("click", closeCandidateDialog);

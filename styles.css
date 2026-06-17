@@ -399,6 +399,13 @@ select,
   line-height: 1.45;
 }
 
+.alert-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
 .table-panel {
   margin-top: 18px;
 }
