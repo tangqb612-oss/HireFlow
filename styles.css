@@ -26,6 +26,10 @@ body {
   font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 button,
 select {
   font: inherit;
@@ -188,6 +192,7 @@ select,
   border-radius: 8px;
   background: var(--surface);
   box-shadow: var(--shadow);
+  scroll-margin-top: 24px;
 }
 
 .metric-card {

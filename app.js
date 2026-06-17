@@ -77,6 +77,7 @@ const state = {
 };
 
 const dom = {
+  navItems: document.querySelectorAll(".nav-item"),
   importBtn: document.querySelector("#importBtn"),
   chatFeed: document.querySelector("#chatFeed"),
   parseStatus: document.querySelector("#parseStatus"),
@@ -91,6 +92,19 @@ const dom = {
   alerts: document.querySelector("#alerts"),
   candidateRows: document.querySelector("#candidateRows"),
 };
+
+function setActiveNav(targetId) {
+  dom.navItems.forEach((item) => {
+    item.classList.toggle("active", item.dataset.target === targetId);
+  });
+}
+
+function scrollToSection(targetId) {
+  const section = document.querySelector(`#${targetId}`);
+  if (!section) return;
+  section.scrollIntoView({ behavior: "smooth", block: "start" });
+  setActiveNav(targetId);
+}
 
 function renderChat() {
   dom.chatFeed.innerHTML = messages
@@ -243,6 +257,9 @@ function importMessages() {
 }
 
 dom.importBtn.addEventListener("click", importMessages);
+dom.navItems.forEach((item) => {
+  item.addEventListener("click", () => scrollToSection(item.dataset.target));
+});
 dom.roleFilter.addEventListener("change", (event) => {
   state.roleFilter = event.target.value;
   render();
