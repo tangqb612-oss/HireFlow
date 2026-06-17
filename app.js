@@ -9,7 +9,7 @@ const messages = [
   },
   {
     sender: "招聘群-产品线",
-    text: "王雨晴，产品经理，内推，已发 offer，预计 6 月 24 日入职，负责人 Carol。",
+    text: "王雨晴，产品经理，香港大学硕士，海外院校QS排名26，内推，已发 offer，预计 6 月 24 日入职，负责人 Carol。",
   },
   {
     sender: "企业微信-招聘协同群",
@@ -78,7 +78,7 @@ const baseCandidates = [
     gender: "女",
     degree: "硕士",
     school: "香港大学",
-    schoolTier: "海外 QS",
+    schoolTier: "海外院校QS排名26",
     phone: "136****8831",
     email: "wangyuqing@example.com",
     role: "产品经理",

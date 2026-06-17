@@ -168,15 +168,18 @@
             <input name="school">
           </label>
           <label>
-            院校层次
-            <select name="schoolTier">
-              <option value="985">985</option>
-              <option value="211">211</option>
-              <option value="双一流">双一流</option>
-              <option value="海外 QS">海外 QS</option>
-              <option value="普通本科">普通本科</option>
-              <option value="未填写">未填写</option>
-            </select>
+            院校层次/QS排名
+            <input name="schoolTier" list="schoolTierOptions" placeholder="如：985 / 海外院校QS排名100">
+            <datalist id="schoolTierOptions">
+              <option value="985">
+              <option value="211">
+              <option value="双一流">
+              <option value="海外院校QS排名50">
+              <option value="海外院校QS排名100">
+              <option value="海外院校QS排名150">
+              <option value="普通本科">
+              <option value="未填写">
+            </datalist>
           </label>
           <label>
             电话
