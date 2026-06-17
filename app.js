@@ -23,7 +23,14 @@ const messages = [
 
 const baseCandidates = [
   {
+    id: "c-zhangchen",
     name: "张晨",
+    gender: "男",
+    degree: "本科",
+    school: "上海交通大学",
+    schoolTier: "985",
+    phone: "138****1024",
+    email: "zhangchen@example.com",
     role: "前端工程师",
     source: "Boss 直聘",
     stage: "待一面",
@@ -32,9 +39,23 @@ const baseCandidates = [
     tags: ["React 5 年", "重复合并"],
     sync: "已同步",
     risk: "duplicate",
+    stopped: false,
+    evaluations: [
+      { stage: "简历筛选", result: "通过", performance: "React 项目经验完整，作品集补充后匹配度提升。", reason: "技术栈匹配前端岗位" },
+      { stage: "一面", result: "待评估", performance: "待面试官录入一面表现。", reason: "" },
+      { stage: "二面", result: "待开始", performance: "", reason: "" },
+      { stage: "Offer", result: "待开始", performance: "", reason: "" },
+    ],
   },
   {
+    id: "c-lihang",
     name: "李航",
+    gender: "男",
+    degree: "硕士",
+    school: "华中科技大学",
+    schoolTier: "985",
+    phone: "待补充",
+    email: "lihang@example.com",
     role: "后端工程师",
     source: "企业微信推荐",
     stage: "通过初筛",
@@ -43,9 +64,23 @@ const baseCandidates = [
     tags: ["Java", "缺面试时间"],
     sync: "待确认",
     risk: "missing",
+    stopped: false,
+    evaluations: [
+      { stage: "简历筛选", result: "通过", performance: "Java、微服务经验与岗位要求匹配。", reason: "基础条件符合" },
+      { stage: "一面", result: "待安排", performance: "面试时间未确认。", reason: "需 HR 继续协调" },
+      { stage: "二面", result: "待开始", performance: "", reason: "" },
+      { stage: "Offer", result: "待开始", performance: "", reason: "" },
+    ],
   },
   {
+    id: "c-wangyuqing",
     name: "王雨晴",
+    gender: "女",
+    degree: "硕士",
+    school: "香港大学",
+    schoolTier: "海外 QS",
+    phone: "136****8831",
+    email: "wangyuqing@example.com",
     role: "产品经理",
     source: "内推",
     stage: "已 Offer",
@@ -54,9 +89,23 @@ const baseCandidates = [
     tags: ["Offer 跟进入职"],
     sync: "已同步",
     risk: "",
+    stopped: false,
+    evaluations: [
+      { stage: "简历筛选", result: "通过", performance: "产品经验与业务线方向一致。", reason: "内推强匹配" },
+      { stage: "一面", result: "通过", performance: "需求分析和沟通表达优秀。", reason: "业务理解较好" },
+      { stage: "二面", result: "通过", performance: "方案拆解完整，推进意识强。", reason: "综合表现通过" },
+      { stage: "Offer", result: "通过", performance: "已发 Offer，等待入职。", reason: "薪资和到岗时间已确认" },
+    ],
   },
   {
+    id: "c-zhaoyiming",
     name: "赵一鸣",
+    gender: "男",
+    degree: "本科",
+    school: "南京大学",
+    schoolTier: "985",
+    phone: "待补充",
+    email: "zhaoyiming@example.com",
     role: "数据分析师",
     source: "拉勾",
     stage: "简历待筛",
@@ -65,6 +114,13 @@ const baseCandidates = [
     tags: ["缺联系电话", "待筛选"],
     sync: "待确认",
     risk: "missing",
+    stopped: false,
+    evaluations: [
+      { stage: "简历筛选", result: "待评估", performance: "简历待筛，缺联系电话。", reason: "基础信息不完整" },
+      { stage: "一面", result: "待开始", performance: "", reason: "" },
+      { stage: "二面", result: "待开始", performance: "", reason: "" },
+      { stage: "Offer", result: "待开始", performance: "", reason: "" },
+    ],
   },
 ];
 
@@ -74,6 +130,7 @@ const state = {
   candidates: [],
   roleFilter: "all",
   ownerFilter: "all",
+  selectedCandidateId: "",
 };
 
 const dom = {
@@ -92,6 +149,12 @@ const dom = {
   funnel: document.querySelector("#funnel"),
   alerts: document.querySelector("#alerts"),
   candidateRows: document.querySelector("#candidateRows"),
+  candidateDialog: document.querySelector("#candidateDialog"),
+  candidateForm: document.querySelector("#candidateForm"),
+  dialogTitle: document.querySelector("#dialogTitle"),
+  closeDialogBtn: document.querySelector("#closeDialogBtn"),
+  cancelDialogBtn: document.querySelector("#cancelDialogBtn"),
+  stageEditor: document.querySelector("#stageEditor"),
 };
 
 function setActiveNav(view) {
@@ -217,6 +280,14 @@ function tagClass(tag) {
   return "tag";
 }
 
+function escapeHTML(value) {
+  return String(value || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
 function renderTable(candidates) {
   dom.candidateRows.innerHTML = candidates.length
     ? candidates
@@ -231,11 +302,96 @@ function renderTable(candidates) {
               <td>${candidate.owner}</td>
               <td>${candidate.tags.map((tag) => `<span class="${tagClass(tag)}">${tag}</span>`).join("")}</td>
               <td class="${candidate.sync === "已同步" ? "sync-ok" : "sync-pending"}">${candidate.sync}</td>
+              <td><button class="small-btn" data-candidate-id="${candidate.id}">查看/编辑</button></td>
             </tr>
           `
         )
         .join("")
-    : `<tr><td colspan="8" class="empty">点击“导入今日群聊”生成 AI 招聘台账</td></tr>`;
+    : `<tr><td colspan="9" class="empty">点击“导入今日群聊”生成 AI 招聘台账</td></tr>`;
+}
+
+function setField(name, value) {
+  const field = dom.candidateForm.elements[name];
+  if (field) field.value = value || "";
+}
+
+function renderStageEditor(candidate) {
+  dom.stageEditor.innerHTML = candidate.evaluations
+    .map(
+      (item, index) => `
+        <article class="stage-card">
+          <div class="stage-card-head">
+            <strong>${item.stage}</strong>
+            <select name="stageResult-${index}">
+              ${["待开始", "待安排", "待评估", "通过", "不通过"].map((result) => `<option value="${result}" ${item.result === result ? "selected" : ""}>${result}</option>`).join("")}
+            </select>
+          </div>
+          <label>
+            表现评价
+            <textarea name="stagePerformance-${index}" rows="3">${escapeHTML(item.performance)}</textarea>
+          </label>
+          <label>
+            通过/不通过原因
+            <input name="stageReason-${index}" value="${escapeHTML(item.reason)}">
+          </label>
+        </article>
+      `
+    )
+    .join("");
+}
+
+function openCandidateDialog(candidateId) {
+  const candidate = state.candidates.find((item) => item.id === candidateId);
+  if (!candidate) return;
+  state.selectedCandidateId = candidateId;
+  dom.dialogTitle.textContent = `${candidate.name} - ${candidate.role}`;
+  setField("name", candidate.name);
+  setField("gender", candidate.gender);
+  setField("degree", candidate.degree);
+  setField("school", candidate.school);
+  setField("schoolTier", candidate.schoolTier);
+  setField("phone", candidate.phone);
+  setField("email", candidate.email);
+  setField("role", candidate.role);
+  dom.candidateForm.elements.stopped.checked = candidate.stopped;
+  renderStageEditor(candidate);
+  dom.candidateDialog.showModal();
+}
+
+function closeCandidateDialog() {
+  state.selectedCandidateId = "";
+  dom.candidateDialog.close();
+}
+
+function saveCandidate(event) {
+  event.preventDefault();
+  const candidate = state.candidates.find((item) => item.id === state.selectedCandidateId);
+  if (!candidate) return;
+
+  candidate.name = dom.candidateForm.elements.name.value.trim();
+  candidate.gender = dom.candidateForm.elements.gender.value;
+  candidate.degree = dom.candidateForm.elements.degree.value.trim();
+  candidate.school = dom.candidateForm.elements.school.value.trim();
+  candidate.schoolTier = dom.candidateForm.elements.schoolTier.value;
+  candidate.phone = dom.candidateForm.elements.phone.value.trim();
+  candidate.email = dom.candidateForm.elements.email.value.trim();
+  candidate.role = dom.candidateForm.elements.role.value.trim();
+  candidate.stopped = dom.candidateForm.elements.stopped.checked;
+  candidate.tags = [
+    candidate.schoolTier,
+    candidate.stopped ? "流程已停止" : candidate.tags.find((tag) => tag.includes("缺") || tag.includes("重复")) || "档案已维护",
+  ].filter(Boolean);
+
+  candidate.evaluations = candidate.evaluations.map((item, index) => ({
+    ...item,
+    result: dom.candidateForm.elements[`stageResult-${index}`].value,
+    performance: dom.candidateForm.elements[`stagePerformance-${index}`].value.trim(),
+    reason: dom.candidateForm.elements[`stageReason-${index}`].value.trim(),
+  }));
+
+  renderFilters();
+  render();
+  closeCandidateDialog();
 }
 
 function render() {
@@ -254,7 +410,7 @@ function importMessages() {
 
   window.setTimeout(() => {
     state.imported = true;
-    state.candidates = [...baseCandidates];
+    state.candidates = structuredClone(baseCandidates);
     renderFilters();
     render();
     dom.parseStatus.textContent = "已抽取 4 条记录";
@@ -267,6 +423,14 @@ dom.importBtn.addEventListener("click", importMessages);
 dom.navItems.forEach((item) => {
   item.addEventListener("click", () => showSection(item.dataset.view, item.dataset.target));
 });
+dom.candidateRows.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-candidate-id]");
+  if (!button) return;
+  openCandidateDialog(button.dataset.candidateId);
+});
+dom.candidateForm.addEventListener("submit", saveCandidate);
+dom.closeDialogBtn.addEventListener("click", closeCandidateDialog);
+dom.cancelDialogBtn.addEventListener("click", closeCandidateDialog);
 dom.roleFilter.addEventListener("change", (event) => {
   state.roleFilter = event.target.value;
   render();

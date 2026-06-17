@@ -35,6 +35,11 @@ select {
   font: inherit;
 }
 
+input,
+textarea {
+  font: inherit;
+}
+
 .app-shell {
   display: grid;
   grid-template-columns: 260px 1fr;
@@ -177,6 +182,28 @@ select,
 
 .primary-btn:hover {
   background: var(--primary-dark);
+}
+
+.ghost-btn,
+.small-btn {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.ghost-btn {
+  height: 38px;
+  padding: 0 14px;
+}
+
+.small-btn {
+  padding: 6px 10px;
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .metrics-grid {
@@ -428,4 +455,110 @@ tbody tr:hover {
   padding: 24px;
   color: var(--muted);
   text-align: center;
+}
+
+.candidate-dialog {
+  width: min(980px, calc(100vw - 80px));
+  max-height: calc(100vh - 80px);
+  border: 0;
+  border-radius: 8px;
+  padding: 0;
+  color: var(--ink);
+  overflow: auto;
+  box-shadow: 0 30px 80px rgba(10, 24, 38, 0.25);
+}
+
+.candidate-dialog::backdrop {
+  background: rgba(11, 28, 46, 0.42);
+}
+
+.candidate-dialog form {
+  padding: 22px;
+}
+
+.dialog-head,
+.dialog-actions,
+.section-title-row,
+.stage-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.dialog-head {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 16px;
+}
+
+.dialog-head h3,
+.detail-section h4 {
+  margin: 0;
+}
+
+.detail-section {
+  margin-top: 18px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.form-grid label,
+.stage-card label,
+.stop-flow {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.form-grid input,
+.form-grid select,
+.stage-card input,
+.stage-card select,
+.stage-card textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 10px;
+  color: var(--ink);
+  background: #ffffff;
+}
+
+.stop-flow {
+  grid-auto-flow: column;
+  align-items: center;
+  color: var(--danger);
+}
+
+.stage-editor {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.stage-card {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background: #f8fbfd;
+}
+
+.stage-card-head strong {
+  font-size: 15px;
+}
+
+.dialog-actions {
+  justify-content: flex-end;
+  border-top: 1px solid var(--line);
+  margin-top: 20px;
+  padding-top: 16px;
 }

@@ -124,6 +124,7 @@
                 <th>负责人</th>
                 <th>AI 标签</th>
                 <th>同步状态</th>
+                <th>操作</th>
               </tr>
             </thead>
             <tbody id="candidateRows"></tbody>
@@ -132,6 +133,83 @@
       </section>
     </section>
   </main>
+
+  <dialog id="candidateDialog" class="candidate-dialog">
+    <form id="candidateForm" method="dialog">
+      <div class="dialog-head">
+        <div>
+          <span class="panel-label">应聘者档案</span>
+          <h3 id="dialogTitle">查看/编辑候选人</h3>
+        </div>
+        <button type="button" id="closeDialogBtn" class="ghost-btn">关闭</button>
+      </div>
+
+      <section class="detail-section">
+        <h4>简历基本信息</h4>
+        <div class="form-grid">
+          <label>
+            姓名
+            <input name="name" required>
+          </label>
+          <label>
+            性别
+            <select name="gender">
+              <option value="男">男</option>
+              <option value="女">女</option>
+              <option value="未填写">未填写</option>
+            </select>
+          </label>
+          <label>
+            学历
+            <input name="degree">
+          </label>
+          <label>
+            毕业院校
+            <input name="school">
+          </label>
+          <label>
+            院校层次
+            <select name="schoolTier">
+              <option value="985">985</option>
+              <option value="211">211</option>
+              <option value="双一流">双一流</option>
+              <option value="海外 QS">海外 QS</option>
+              <option value="普通本科">普通本科</option>
+              <option value="未填写">未填写</option>
+            </select>
+          </label>
+          <label>
+            电话
+            <input name="phone">
+          </label>
+          <label>
+            邮箱
+            <input name="email" type="email">
+          </label>
+          <label>
+            当前岗位
+            <input name="role">
+          </label>
+        </div>
+      </section>
+
+      <section class="detail-section">
+        <div class="section-title-row">
+          <h4>招聘阶段评价</h4>
+          <label class="stop-flow">
+            <input name="stopped" type="checkbox">
+            停止该应聘者招聘流程
+          </label>
+        </div>
+        <div id="stageEditor" class="stage-editor"></div>
+      </section>
+
+      <div class="dialog-actions">
+        <button type="button" id="cancelDialogBtn" class="ghost-btn">取消</button>
+        <button type="submit" class="primary-btn">保存档案</button>
+      </div>
+    </form>
+  </dialog>
 
   <script src="app.js"></script>
 </body>
