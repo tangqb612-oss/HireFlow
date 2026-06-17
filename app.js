@@ -195,8 +195,12 @@ function renderChat() {
     .join("");
 }
 
+function getActiveCandidates() {
+  return state.candidates.filter((candidate) => !candidate.stopped);
+}
+
 function getFilteredCandidates() {
-  return state.candidates.filter((candidate) => {
+  return getActiveCandidates().filter((candidate) => {
     const roleMatched = state.roleFilter === "all" || candidate.role === state.roleFilter;
     const ownerMatched = state.ownerFilter === "all" || candidate.owner === state.ownerFilter;
     return roleMatched && ownerMatched;
@@ -204,8 +208,9 @@ function getFilteredCandidates() {
 }
 
 function renderFilters() {
-  const roles = [...new Set(state.candidates.map((candidate) => candidate.role))];
-  const owners = [...new Set(state.candidates.map((candidate) => candidate.owner))];
+  const activeCandidates = getActiveCandidates();
+  const roles = [...new Set(activeCandidates.map((candidate) => candidate.role))];
+  const owners = [...new Set(activeCandidates.map((candidate) => candidate.owner))];
   dom.roleFilter.innerHTML = `<option value="all">全部岗位</option>${roles
     .map((role) => `<option value="${role}">${role}</option>`)
     .join("")}`;
@@ -225,7 +230,7 @@ function renderMetrics(candidates) {
   dom.pendingReview.textContent = pending;
   dom.syncedCount.textContent = synced;
   dom.riskCount.textContent = risks;
-  dom.savedMinutes.textContent = `${state.candidates.length * 8} 分钟`;
+  dom.savedMinutes.textContent = `${getActiveCandidates().length * 8} 分钟`;
   dom.talentCount.textContent = `${stopped} 人`;
 }
 
