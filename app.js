@@ -1,4 +1,4 @@
-const messages = [
+let messages = [
   {
     sender: "招聘群-上海研发",
     text: "张晨，前端工程师，来自 Boss 直聘，React 5 年经验，约 6 月 18 日 14:00 一面，负责人 Alice，手机号 138****1024。",
@@ -139,6 +139,7 @@ const state = {
   roleFilter: "all",
   ownerFilter: "all",
   selectedCandidateId: "",
+  apiMode: window.location.protocol !== "file:",
 };
 
 const dom = {
@@ -197,6 +198,36 @@ function renderChat() {
       `
     )
     .join("");
+}
+
+async function apiRequest(path, options = {}) {
+  if (!state.apiMode) {
+    throw new Error("当前通过 file:// 打开，使用本地模拟数据");
+  }
+
+  const response = await fetch(path, {
+    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+    ...options,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: "接口请求失败" }));
+    throw new Error(error.error || "接口请求失败");
+  }
+
+  return response.json();
+}
+
+async function persistCandidate(candidate) {
+  if (!state.apiMode || !state.imported) return;
+  try {
+    await apiRequest(`/api/candidates/${candidate.id}`, {
+      method: "PATCH",
+      body: JSON.stringify(candidate),
+    });
+  } catch (error) {
+    console.warn("候选人保存到后端失败，已保留前端状态：", error.message);
+  }
 }
 
 function getActiveCandidates() {
@@ -460,6 +491,7 @@ function saveCandidate(event) {
     resolveCandidateTodo(candidate.id, "resolve", false);
   }
 
+  persistCandidate(candidate);
   renderFilters();
   render();
   closeCandidateDialog();
@@ -482,6 +514,7 @@ function resolveCandidateTodo(candidateId, action, shouldRender = true) {
   candidate.risk = "";
   candidate.todoStatus = "已完成";
   candidate.sync = "已同步";
+  persistCandidate(candidate);
 
   if (shouldRender) {
     renderFilters();
@@ -498,21 +531,35 @@ function render() {
   renderTalentPool();
 }
 
-function importMessages() {
+async function importMessages() {
   dom.parseStatus.textContent = "AI 解析中";
   dom.parseStatus.className = "status-pill active";
   dom.importBtn.disabled = true;
   dom.importBtn.textContent = "解析中...";
 
-  window.setTimeout(() => {
+  try {
+    const result = await apiRequest("/api/wecom/import-today", { method: "POST" });
     state.imported = true;
-    state.candidates = structuredClone(baseCandidates);
+    messages = result.messages || messages;
+    state.candidates = result.candidates || [];
+    renderChat();
     renderFilters();
     render();
-    dom.parseStatus.textContent = "已抽取 4 条记录";
-    dom.importBtn.disabled = false;
-    dom.importBtn.textContent = "重新导入群聊";
-  }, 600);
+    dom.parseStatus.textContent = `已抽取 ${state.candidates.length} 条记录`;
+  } catch (error) {
+    window.setTimeout(() => {
+      state.imported = true;
+      state.candidates = structuredClone(baseCandidates);
+      renderFilters();
+      render();
+      dom.parseStatus.textContent = "本地模拟：已抽取 4 条记录";
+    }, 400);
+  } finally {
+    window.setTimeout(() => {
+      dom.importBtn.disabled = false;
+      dom.importBtn.textContent = "重新导入群聊";
+    }, 450);
+  }
 }
 
 dom.importBtn.addEventListener("click", importMessages);

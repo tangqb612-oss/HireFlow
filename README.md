@@ -5,10 +5,10 @@ HireFlow 是一个面向 HR 招聘运营的 PC 端 AI 应用 Demo，用最小成
 ## 作业提交信息
 
 - 代码仓库：[https://github.com/tangqb612-oss/HireFlow.git](https://github.com/tangqb612-oss/HireFlow.git)
-- 本地 Demo：直接用浏览器打开 `index.html`
+- 本地 Demo：运行 `npm start` 后访问 `http://localhost:4173`
 - 在线预览建议：启用 GitHub Pages，选择 `main` 分支根目录，预期地址为 `https://tangqb612-oss.github.io/HireFlow/`
-- 技术栈：`HTML + CSS + JavaScript`
-- 成本策略：第一版无后端、无数据库、无真实模型调用成本，先验证业务价值和交互闭环
+- 技术栈：`HTML + CSS + JavaScript + Node.js`
+- 成本策略：第一版使用无依赖 Node 后端模拟企业微信导入接口，先验证业务价值和交互闭环
 
 ## 背景与痛点
 
@@ -49,8 +49,11 @@ HireFlow 是一个面向 HR 招聘运营的 PC 端 AI 应用 Demo，用最小成
 运行方式：
 
 1. 克隆或下载本仓库。
-2. 直接用浏览器打开 `index.html`。
-3. 点击「导入今日群聊」查看 AI 招聘台账自动生成效果。
+2. 执行 `npm start`。
+3. 浏览器访问 `http://localhost:4173`。
+4. 点击「导入今日群聊」，前端会调用 `/api/wecom/import-today`，由后端返回模拟企业微信群聊和 AI 抽取结果。
+
+如果直接用浏览器打开 `index.html`，页面会自动回退到本地模拟数据，但不会调用后端 API。
 
 ## 最小成本落地架构
 
@@ -59,8 +62,19 @@ HireFlow 是一个面向 HR 招聘运营的 PC 端 AI 应用 Demo，用最小成
 低成本优先级如下：
 
 - Demo 阶段：前端内置企业微信群聊样例数据。
+- 最小可实施版：Node 后端提供 `/api/wecom/import-today`，模拟企业微信今日群聊导入，前端点击按钮即可调用接口刷新页面。
 - MVP 阶段：HR 复制群聊文本到页面，或通过企业微信群机器人收集固定格式消息。
 - 增强阶段：在企业审批允许后接入企业微信会话存档、消息回调或 ATS 系统。
+
+当前后端文件为 `server.js`，真实接入时替换其中 `/api/wecom/import-today` 的 mock 逻辑：
+
+```text
+1. 校验 HR 企业微信登录态
+2. 根据 HR 绑定的招聘群读取今日群聊
+3. 调用 AI 模型抽取候选人 JSON
+4. 写入数据库/缓存
+5. 返回 candidates 给前端
+```
 
 ### 2. AI 结构化处理层
 
@@ -91,6 +105,7 @@ HireFlow 是一个面向 HR 招聘运营的 PC 端 AI 应用 Demo，用最小成
 ### 3. 数据同步层
 
 - Demo 阶段：前端表格模拟腾讯在线文档台账。
+- 最小可实施版：候选人修改通过 `PATCH /api/candidates/:id` 同步到 Node 后端内存状态。
 - MVP 阶段：导出 CSV 或通过轻量服务写入腾讯在线文档/腾讯表格。
 - 增强阶段：通过腾讯文档 API、云函数或企业内部服务实现自动双向同步。
 
@@ -143,6 +158,8 @@ HireFlow 是一个面向 HR 招聘运营的 PC 端 AI 应用 Demo，用最小成
 
 ```text
 HireFlow/
+├── server.js
+├── package.json
 ├── index.html
 ├── styles.css
 ├── app.js

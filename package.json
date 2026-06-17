@@ -1,0 +1,10 @@
+{
+  "name": "hireflow",
+  "version": "1.0.0",
+  "private": true,
+  "description": "HireFlow AI recruitment efficiency demo with a minimal WeCom import API shell.",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check app.js && node --check server.js"
+  }
+}
