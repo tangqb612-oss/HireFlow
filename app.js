@@ -40,6 +40,7 @@ const baseCandidates = [
     sync: "已同步",
     risk: "duplicate",
     stopped: false,
+    stopReason: "",
     evaluations: [
       { stage: "简历筛选", result: "通过", performance: "React 项目经验完整，作品集补充后匹配度提升。", reason: "技术栈匹配前端岗位" },
       { stage: "一面", result: "待评估", performance: "待面试官录入一面表现。", reason: "" },
@@ -65,6 +66,7 @@ const baseCandidates = [
     sync: "待确认",
     risk: "missing",
     stopped: false,
+    stopReason: "",
     evaluations: [
       { stage: "简历筛选", result: "通过", performance: "Java、微服务经验与岗位要求匹配。", reason: "基础条件符合" },
       { stage: "一面", result: "待安排", performance: "面试时间未确认。", reason: "需 HR 继续协调" },
@@ -90,6 +92,7 @@ const baseCandidates = [
     sync: "已同步",
     risk: "",
     stopped: false,
+    stopReason: "",
     evaluations: [
       { stage: "简历筛选", result: "通过", performance: "产品经验与业务线方向一致。", reason: "内推强匹配" },
       { stage: "一面", result: "通过", performance: "需求分析和沟通表达优秀。", reason: "业务理解较好" },
@@ -115,6 +118,7 @@ const baseCandidates = [
     sync: "待确认",
     risk: "missing",
     stopped: false,
+    stopReason: "",
     evaluations: [
       { stage: "简历筛选", result: "待评估", performance: "简历待筛，缺联系电话。", reason: "基础信息不完整" },
       { stage: "一面", result: "待开始", performance: "", reason: "" },
@@ -146,9 +150,11 @@ const dom = {
   syncedCount: document.querySelector("#syncedCount"),
   riskCount: document.querySelector("#riskCount"),
   savedMinutes: document.querySelector("#savedMinutes"),
+  talentCount: document.querySelector("#talentCount"),
   funnel: document.querySelector("#funnel"),
   alerts: document.querySelector("#alerts"),
   candidateRows: document.querySelector("#candidateRows"),
+  talentRows: document.querySelector("#talentRows"),
   candidateDialog: document.querySelector("#candidateDialog"),
   candidateForm: document.querySelector("#candidateForm"),
   dialogTitle: document.querySelector("#dialogTitle"),
@@ -164,7 +170,7 @@ function setActiveNav(view) {
 }
 
 function setActiveView(view) {
-  dom.workspace.classList.remove("view-overview", "view-wechat", "view-ledger", "view-alerts");
+  dom.workspace.classList.remove("view-overview", "view-wechat", "view-ledger", "view-alerts", "view-talent");
   dom.workspace.classList.add(`view-${view}`);
   setActiveNav(view);
 }
@@ -214,11 +220,13 @@ function renderMetrics(candidates) {
   const pending = candidates.filter((candidate) => candidate.sync !== "已同步").length;
   const synced = candidates.filter((candidate) => candidate.sync === "已同步").length;
   const risks = candidates.filter((candidate) => candidate.risk).length;
+  const stopped = state.candidates.filter((candidate) => candidate.stopped).length;
   dom.totalCandidates.textContent = candidates.length;
   dom.pendingReview.textContent = pending;
   dom.syncedCount.textContent = synced;
   dom.riskCount.textContent = risks;
   dom.savedMinutes.textContent = `${state.candidates.length * 8} 分钟`;
+  dom.talentCount.textContent = `${stopped} 人`;
 }
 
 function renderFunnel(candidates) {
@@ -310,6 +318,38 @@ function renderTable(candidates) {
     : `<tr><td colspan="9" class="empty">点击“导入今日群聊”生成 AI 招聘台账</td></tr>`;
 }
 
+function getStopReason(candidate) {
+  const failed = candidate.evaluations.find((item) => item.result === "不通过" && item.reason);
+  const latestReason = [...candidate.evaluations].reverse().find((item) => item.reason);
+  return candidate.stopReason || failed?.reason || latestReason?.reason || "人工确认停止流程";
+}
+
+function getLastStage(candidate) {
+  const active = [...candidate.evaluations].reverse().find((item) => item.result !== "待开始");
+  return active ? `${active.stage}：${active.result}` : candidate.stage;
+}
+
+function renderTalentPool() {
+  const stoppedCandidates = state.candidates.filter((candidate) => candidate.stopped);
+  dom.talentRows.innerHTML = stoppedCandidates.length
+    ? stoppedCandidates
+        .map(
+          (candidate) => `
+            <tr>
+              <td><strong>${candidate.name}</strong></td>
+              <td>${candidate.role}</td>
+              <td>${candidate.degree} / ${candidate.school}<br><span class="muted-text">${candidate.schoolTier}</span></td>
+              <td>${candidate.phone}<br><span class="muted-text">${candidate.email}</span></td>
+              <td>${getStopReason(candidate)}</td>
+              <td>${getLastStage(candidate)}</td>
+              <td><button class="small-btn" data-candidate-id="${candidate.id}">查看/编辑</button></td>
+            </tr>
+          `
+        )
+        .join("")
+    : `<tr><td colspan="7" class="empty">暂无停止招聘流程的人才。可在候选人档案中勾选“停止该应聘者招聘流程”后保存。</td></tr>`;
+}
+
 function setField(name, value) {
   const field = dom.candidateForm.elements[name];
   if (field) field.value = value || "";
@@ -353,6 +393,7 @@ function openCandidateDialog(candidateId) {
   setField("phone", candidate.phone);
   setField("email", candidate.email);
   setField("role", candidate.role);
+  setField("stopReason", candidate.stopReason);
   dom.candidateForm.elements.stopped.checked = candidate.stopped;
   renderStageEditor(candidate);
   dom.candidateDialog.showModal();
@@ -377,6 +418,7 @@ function saveCandidate(event) {
   candidate.email = dom.candidateForm.elements.email.value.trim();
   candidate.role = dom.candidateForm.elements.role.value.trim();
   candidate.stopped = dom.candidateForm.elements.stopped.checked;
+  candidate.stopReason = dom.candidateForm.elements.stopReason.value.trim();
   candidate.tags = [
     candidate.schoolTier,
     candidate.stopped ? "流程已停止" : candidate.tags.find((tag) => tag.includes("缺") || tag.includes("重复")) || "档案已维护",
@@ -400,6 +442,7 @@ function render() {
   renderFunnel(filtered);
   renderAlerts(filtered);
   renderTable(filtered);
+  renderTalentPool();
 }
 
 function importMessages() {
@@ -424,6 +467,11 @@ dom.navItems.forEach((item) => {
   item.addEventListener("click", () => showSection(item.dataset.view, item.dataset.target));
 });
 dom.candidateRows.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-candidate-id]");
+  if (!button) return;
+  openCandidateDialog(button.dataset.candidateId);
+});
+dom.talentRows.addEventListener("click", (event) => {
   const button = event.target.closest("[data-candidate-id]");
   if (!button) return;
   openCandidateDialog(button.dataset.candidateId);

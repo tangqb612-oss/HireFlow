@@ -22,6 +22,7 @@
         <button class="nav-item" data-view="wechat" data-target="wechatMessages" title="查看企业微信群聊消息和 AI 抽取状态">企业微信消息</button>
         <button class="nav-item" data-view="ledger" data-target="documentLedger" title="查看模拟同步到腾讯在线文档的招聘台账">腾讯文档台账</button>
         <button class="nav-item" data-view="alerts" data-target="riskAlerts" title="查看缺字段、重复候选人等异常提醒">异常提醒</button>
+        <button class="nav-item" data-view="talent" data-target="talentPool" title="查看已停止招聘流程但保留档案的人才">人才储备库</button>
       </nav>
 
       <section class="side-panel">
@@ -131,6 +132,32 @@
           </table>
         </div>
       </section>
+
+      <section id="talentPool" class="panel table-panel talent-panel">
+        <div class="panel-head">
+          <div>
+            <span class="panel-label">人才储备库</span>
+            <h3>已停止招聘流程的保留人才</h3>
+          </div>
+          <span id="talentCount" class="sync-badge">0 人</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>候选人</th>
+                <th>岗位</th>
+                <th>学历/院校</th>
+                <th>联系方式</th>
+                <th>停止原因</th>
+                <th>最后阶段</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="talentRows"></tbody>
+          </table>
+        </div>
+      </section>
     </section>
   </main>
 
@@ -204,6 +231,10 @@
             停止该应聘者招聘流程
           </label>
         </div>
+        <label class="stop-reason">
+          停止/储备原因
+          <input name="stopReason" placeholder="如：薪资不匹配，保留至后续岗位；阶段评价原因也会同步保留">
+        </label>
         <div id="stageEditor" class="stage-editor"></div>
       </section>
 

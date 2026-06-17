@@ -254,12 +254,17 @@ select,
 .workspace.view-wechat .funnel-panel,
 .workspace.view-wechat .alerts-panel,
 .workspace.view-wechat .table-panel,
+.workspace.view-overview .talent-panel,
 .workspace.view-ledger .metrics-grid,
 .workspace.view-ledger .main-grid,
+.workspace.view-ledger .talent-panel,
 .workspace.view-alerts .metrics-grid,
 .workspace.view-alerts .chat-panel,
 .workspace.view-alerts .funnel-panel,
-.workspace.view-alerts .table-panel {
+.workspace.view-alerts .table-panel,
+.workspace.view-talent .metrics-grid,
+.workspace.view-talent .main-grid,
+.workspace.view-talent #documentLedger {
   display: none;
 }
 
@@ -268,7 +273,8 @@ select,
   grid-template-columns: minmax(0, 1fr);
 }
 
-.workspace.view-ledger .table-panel {
+.workspace.view-ledger .table-panel,
+.workspace.view-talent .talent-panel {
   margin-top: 0;
 }
 
@@ -451,6 +457,11 @@ tbody tr:hover {
   font-weight: 700;
 }
 
+.muted-text {
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .empty {
   padding: 24px;
   color: var(--muted);
@@ -509,7 +520,8 @@ tbody tr:hover {
 
 .form-grid label,
 .stage-card label,
-.stop-flow {
+.stop-flow,
+.stop-reason {
   display: grid;
   gap: 6px;
   color: var(--muted);
@@ -521,7 +533,8 @@ tbody tr:hover {
 .form-grid select,
 .stage-card input,
 .stage-card select,
-.stage-card textarea {
+.stage-card textarea,
+.stop-reason input {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -534,6 +547,10 @@ tbody tr:hover {
   grid-auto-flow: column;
   align-items: center;
   color: var(--danger);
+}
+
+.stop-reason {
+  margin-top: 12px;
 }
 
 .stage-editor {
