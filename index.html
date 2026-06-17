@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HireFlow AI 招聘提效工作台</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">HF</div>
+        <div>
+          <h1>HireFlow</h1>
+          <p>AI 招聘提效工作台</p>
+        </div>
+      </div>
+
+      <nav class="nav-list" aria-label="工作台导航">
+        <button class="nav-item active">招聘总览</button>
+        <button class="nav-item">企业微信消息</button>
+        <button class="nav-item">腾讯文档台账</button>
+        <button class="nav-item">异常提醒</button>
+      </nav>
+
+      <section class="side-panel">
+        <span class="panel-label">今日自动化收益</span>
+        <strong id="savedMinutes">0 分钟</strong>
+        <p>按每条候选人记录节省 8 分钟人工录入估算。</p>
+      </section>
+    </aside>
+
+    <section class="workspace">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">企业微信 + 腾讯在线文档场景</p>
+          <h2>招聘数据自动记录、同步与可视化</h2>
+        </div>
+        <div class="topbar-actions">
+          <select id="roleFilter" aria-label="按岗位筛选">
+            <option value="all">全部岗位</option>
+          </select>
+          <select id="ownerFilter" aria-label="按负责人筛选">
+            <option value="all">全部负责人</option>
+          </select>
+          <button id="importBtn" class="primary-btn">导入今日群聊</button>
+        </div>
+      </header>
+
+      <section class="metrics-grid" aria-label="招聘核心指标">
+        <article class="metric-card">
+          <span>候选人总数</span>
+          <strong id="totalCandidates">0</strong>
+          <p>AI 已结构化入库</p>
+        </article>
+        <article class="metric-card">
+          <span>待 HR 确认</span>
+          <strong id="pendingReview">0</strong>
+          <p>字段缺失或冲突</p>
+        </article>
+        <article class="metric-card">
+          <span>今日同步</span>
+          <strong id="syncedCount">0</strong>
+          <p>写入腾讯在线文档</p>
+        </article>
+        <article class="metric-card">
+          <span>风险提醒</span>
+          <strong id="riskCount">0</strong>
+          <p>超时、缺字段、重复</p>
+        </article>
+      </section>
+
+      <section class="main-grid">
+        <article class="panel chat-panel">
+          <div class="panel-head">
+            <div>
+              <span class="panel-label">企业微信群消息</span>
+              <h3>AI 自动识别招聘动态</h3>
+            </div>
+            <span id="parseStatus" class="status-pill idle">等待导入</span>
+          </div>
+          <div id="chatFeed" class="chat-feed"></div>
+        </article>
+
+        <article class="panel funnel-panel">
+          <div class="panel-head">
+            <div>
+              <span class="panel-label">招聘漏斗</span>
+              <h3>实时进度</h3>
+            </div>
+          </div>
+          <div id="funnel" class="funnel"></div>
+        </article>
+
+        <article class="panel alerts-panel">
+          <div class="panel-head">
+            <div>
+              <span class="panel-label">AI 待办</span>
+              <h3>需要人工确认</h3>
+            </div>
+          </div>
+          <div id="alerts" class="alert-list"></div>
+        </article>
+      </section>
+
+      <section class="panel table-panel">
+        <div class="panel-head">
+          <div>
+            <span class="panel-label">腾讯在线文档台账</span>
+            <h3>自动同步的招聘数据</h3>
+          </div>
+          <span class="sync-badge">模拟实时同步</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>候选人</th>
+                <th>岗位</th>
+                <th>来源</th>
+                <th>阶段</th>
+                <th>面试/跟进</th>
+                <th>负责人</th>
+                <th>AI 标签</th>
+                <th>同步状态</th>
+              </tr>
+            </thead>
+            <tbody id="candidateRows"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
