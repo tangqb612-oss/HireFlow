@@ -87,7 +87,7 @@ const baseCandidates = [
     email: "wangyuqing@example.com",
     role: "产品经理",
     source: "内推",
-    stage: "已 Offer",
+    stage: "已发offer",
     schedule: "6 月 24 日入职",
     owner: "Carol",
     tags: ["Offer 跟进入职"],
@@ -132,7 +132,7 @@ const baseCandidates = [
   },
 ];
 
-const stageOrder = ["简历待筛", "通过初筛", "待一面", "已 Offer", "已入职"];
+const stageOrder = ["简历待筛", "通过初筛", "待一面", "待二面", "已发offer", "已入职", "终止"];
 const state = {
   imported: false,
   candidates: [],
@@ -241,7 +241,10 @@ function renderMetrics(candidates) {
 function renderFunnel(candidates) {
   const counts = stageOrder.map((stage) => ({
     stage,
-    count: candidates.filter((candidate) => candidate.stage === stage).length,
+    count:
+      stage === "终止"
+        ? state.candidates.filter((candidate) => candidate.stopped).length
+        : candidates.filter((candidate) => candidate.stage === stage).length,
   }));
   const max = Math.max(...counts.map((item) => item.count), 1);
   dom.funnel.innerHTML = counts
@@ -440,6 +443,7 @@ function saveCandidate(event) {
   candidate.role = dom.candidateForm.elements.role.value.trim();
   candidate.stopped = dom.candidateForm.elements.stopped.checked;
   candidate.stopReason = dom.candidateForm.elements.stopReason.value.trim();
+  candidate.stage = candidate.stopped ? "终止" : candidate.stage === "终止" ? "简历待筛" : candidate.stage;
   candidate.tags = [
     candidate.schoolTier,
     candidate.stopped ? "流程已停止" : candidate.tags.find((tag) => tag.includes("缺") || tag.includes("重复")) || "档案已维护",
