@@ -1,9 +1,12 @@
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
+const { DatabaseSync } = require("node:sqlite");
 
 const PORT = Number(process.env.PORT || 4173);
 const ROOT = __dirname;
+const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, "data");
+const DB_PATH = process.env.DB_PATH || path.join(DATA_DIR, "hireflow.sqlite");
 
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
@@ -156,10 +159,64 @@ const seedCandidates = [
   },
 ];
 
-let candidates = [];
-
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
+}
+
+fs.mkdirSync(DATA_DIR, { recursive: true });
+
+const db = new DatabaseSync(DB_PATH);
+db.exec(`
+  CREATE TABLE IF NOT EXISTS candidates (
+    id TEXT PRIMARY KEY,
+    data TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+`);
+
+function getCandidates() {
+  return db
+    .prepare("SELECT data FROM candidates ORDER BY created_at ASC")
+    .all()
+    .map((row) => JSON.parse(row.data));
+}
+
+function getCandidate(id) {
+  const row = db.prepare("SELECT data FROM candidates WHERE id = ?").get(id);
+  return row ? JSON.parse(row.data) : null;
+}
+
+function upsertCandidate(candidate) {
+  const now = new Date().toISOString();
+  const existing = getCandidate(candidate.id);
+  const createdAt = existing?.createdAt || candidate.createdAt || now.slice(0, 10);
+  const next = {
+    ...candidate,
+    createdAt,
+    updatedAt: candidate.updatedAt || now.slice(0, 10),
+  };
+  db.prepare(
+    `INSERT INTO candidates (id, data, created_at, updated_at)
+     VALUES (?, ?, ?, ?)
+     ON CONFLICT(id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at`
+  ).run(next.id, JSON.stringify(next), createdAt, next.updatedAt);
+  return next;
+}
+
+function replaceCandidates(nextCandidates) {
+  const insert = db.prepare("INSERT INTO candidates (id, data, created_at, updated_at) VALUES (?, ?, ?, ?)");
+  db.exec("BEGIN");
+  try {
+    db.prepare("DELETE FROM candidates").run();
+    nextCandidates.forEach((candidate) => {
+      insert.run(candidate.id, JSON.stringify(candidate), candidate.createdAt, candidate.updatedAt);
+    });
+    db.exec("COMMIT");
+  } catch (error) {
+    db.exec("ROLLBACK");
+    throw error;
+  }
 }
 
 function sendJson(res, status, payload) {
@@ -249,13 +306,14 @@ async function handleApi(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
 
   if (req.method === "GET" && url.pathname === "/api/health") {
-    sendJson(res, 200, { ok: true, mode: "mock-wecom-import" });
+    sendJson(res, 200, { ok: true, mode: "mock-wecom-import", database: DB_PATH });
     return;
   }
 
   if (req.method === "POST" && url.pathname === "/api/wecom/import-today") {
     // Replace this block with WeCom auth + chat archive pulling when corp credentials are available.
-    candidates = clone(seedCandidates);
+    replaceCandidates(clone(seedCandidates));
+    const candidates = getCandidates();
     sendJson(res, 200, {
       source: "mock-wecom-chat-archive",
       importedAt: new Date().toISOString(),
@@ -266,20 +324,22 @@ async function handleApi(req, res) {
   }
 
   if (req.method === "GET" && url.pathname === "/api/candidates") {
+    const candidates = getCandidates();
     sendJson(res, 200, { candidates: clone(candidates) });
     return;
   }
 
   const candidateMatch = url.pathname.match(/^\/api\/candidates\/([^/]+)$/);
   if (req.method === "PATCH" && candidateMatch) {
-    const candidate = candidates.find((item) => item.id === candidateMatch[1]);
+    const candidate = getCandidate(candidateMatch[1]);
     if (!candidate) {
       sendJson(res, 404, { error: "Candidate not found" });
       return;
     }
     const patch = await readBody(req);
     mergeCandidate(candidate, patch);
-    sendJson(res, 200, { candidate: clone(candidate) });
+    const saved = upsertCandidate(candidate);
+    sendJson(res, 200, { candidate: clone(saved) });
     return;
   }
 

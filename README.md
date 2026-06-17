@@ -7,14 +7,14 @@ HireFlow 是一个面向 HR 招聘运营的 PC 端 AI 应用 Demo，用最小成
 - 代码仓库：[https://github.com/tangqb612-oss/HireFlow.git](https://github.com/tangqb612-oss/HireFlow.git)
 - 本地 Demo：运行 `npm start` 后访问 `http://localhost:4173`
 - 在线预览建议：启用 GitHub Pages，选择 `main` 分支根目录，预期地址为 `https://tangqb612-oss.github.io/HireFlow/`
-- 技术栈：`HTML + CSS + JavaScript + Node.js`
-- 成本策略：第一版使用无依赖 Node 后端模拟企业微信导入接口，先验证业务价值和交互闭环
+- 技术栈：`HTML + CSS + JavaScript + Node.js + SQLite`
+- 成本策略：第一版使用无依赖 Node 后端、内置 SQLite 数据库、模拟企业微信导入接口，先验证业务价值和交互闭环
 
 ## 提交摘要
 
 本方案围绕 HR 在企业微信、企业微信群、腾讯在线文档之间手工维护招聘数据的痛点，设计并实现了一个可直接运行的 AI 招聘提效 Demo。Demo 重点展示 AI 模型在招聘场景中的实际应用能力：从非结构化群聊消息中抽取候选人档案、判断招聘阶段、识别风险待办、生成周/月招聘统计，并将结果同步呈现在招聘台账和可视化看板中。
 
-当前版本采用最低成本实现：前端工作台 + 无依赖 Node 后端 + 模拟企业微信今日群聊导入接口。真实落地时，只需将 `server.js` 中的 mock 导入逻辑替换为企业微信会话存档/消息回调和真实大模型调用。
+当前版本采用最低成本实现：前端工作台 + 无依赖 Node 后端 + SQLite 持久化 + 模拟企业微信今日群聊导入接口。真实落地时，只需将 `server.js` 中的 mock 导入逻辑替换为企业微信会话存档/消息回调和真实大模型调用。
 
 ## 背景与痛点
 
@@ -61,6 +61,13 @@ HireFlow 是一个面向 HR 招聘运营的 PC 端 AI 应用 Demo，用最小成
 4. 点击「导入今日群聊」，前端会调用 `/api/wecom/import-today`，由后端返回模拟企业微信群聊和 AI 抽取结果。
 
 如果直接用浏览器打开 `index.html`，页面会自动回退到本地模拟数据，但不会调用后端 API。
+
+数据库说明：
+
+- 默认数据库文件：`data/hireflow.sqlite`
+- 可通过环境变量 `DB_PATH` 指定数据库路径。
+- 候选人导入、档案编辑、AI 待办处理都会写入 SQLite。
+- Demo 部署在 Render/Railway 免费实例时，若未绑定持久磁盘，平台重启可能清空本地文件；正式 SaaS 建议切换 PostgreSQL/MySQL。
 
 建议演示流程：
 
@@ -141,6 +148,7 @@ Demo 中的 AI 应用映射：
 
 - Demo 阶段：前端表格模拟腾讯在线文档台账。
 - 最小可实施版：候选人修改通过 `PATCH /api/candidates/:id` 同步到 Node 后端内存状态。
+- SaaS Demo 版：候选人数据持久化到 SQLite，支持服务运行期间反复查看和修改。
 - MVP 阶段：导出 CSV 或通过轻量服务写入腾讯在线文档/腾讯表格。
 - 增强阶段：通过腾讯文档 API、云函数或企业内部服务实现自动双向同步。
 
@@ -193,6 +201,28 @@ GET   /api/reports?period=month    获取月度招聘统计
 - 高频字段用规则抽取，复杂语义再调用大模型。
 - 人工只介入异常确认，不再维护全部招聘台账。
 
+## 在线 SaaS Demo 部署
+
+本仓库已包含 `render.yaml`，可直接部署到 Render 作为在线 SaaS Demo。
+
+部署步骤：
+
+1. 将代码推送到 GitHub。
+2. 登录 Render，选择 New Web Service。
+3. 绑定仓库 `tangqb612-oss/HireFlow`。
+4. 运行命令使用 `npm start`。
+5. Node 版本选择 24 或使用仓库中的 `render.yaml`。
+6. 部署完成后访问 Render 提供的网址。
+
+也可部署到 Railway、腾讯云轻量服务器、阿里云 ECS 等 Node 平台。平台需要支持 Node.js 24，因为当前版本使用 Node 内置 SQLite。
+
+正式生产建议：
+
+- 将 SQLite 替换为 PostgreSQL/MySQL。
+- 为企业微信登录增加 session 和权限控制。
+- 将企业微信、AI 模型、腾讯文档密钥放入环境变量。
+- 接入 HTTPS 域名和访问审计。
+
 ## 验收标准
 
 - 可直接运行：执行 `npm start` 后可访问 Demo。
@@ -216,6 +246,7 @@ GET   /api/reports?period=month    获取月度招聘统计
 HireFlow/
 ├── server.js
 ├── package.json
+├── render.yaml
 ├── index.html
 ├── styles.css
 ├── app.js
