@@ -223,6 +223,28 @@ select,
   align-items: stretch;
 }
 
+.workspace.view-wechat .metrics-grid,
+.workspace.view-wechat .funnel-panel,
+.workspace.view-wechat .alerts-panel,
+.workspace.view-wechat .table-panel,
+.workspace.view-ledger .metrics-grid,
+.workspace.view-ledger .main-grid,
+.workspace.view-alerts .metrics-grid,
+.workspace.view-alerts .chat-panel,
+.workspace.view-alerts .funnel-panel,
+.workspace.view-alerts .table-panel {
+  display: none;
+}
+
+.workspace.view-wechat .main-grid,
+.workspace.view-alerts .main-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.workspace.view-ledger .table-panel {
+  margin-top: 0;
+}
+
 .panel {
   padding: 18px;
 }

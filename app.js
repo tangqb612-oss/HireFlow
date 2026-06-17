@@ -77,6 +77,7 @@ const state = {
 };
 
 const dom = {
+  workspace: document.querySelector(".workspace"),
   navItems: document.querySelectorAll(".nav-item"),
   importBtn: document.querySelector("#importBtn"),
   chatFeed: document.querySelector("#chatFeed"),
@@ -93,17 +94,23 @@ const dom = {
   candidateRows: document.querySelector("#candidateRows"),
 };
 
-function setActiveNav(targetId) {
+function setActiveNav(view) {
   dom.navItems.forEach((item) => {
-    item.classList.toggle("active", item.dataset.target === targetId);
+    item.classList.toggle("active", item.dataset.view === view);
   });
 }
 
-function scrollToSection(targetId) {
+function setActiveView(view) {
+  dom.workspace.classList.remove("view-overview", "view-wechat", "view-ledger", "view-alerts");
+  dom.workspace.classList.add(`view-${view}`);
+  setActiveNav(view);
+}
+
+function showSection(view, targetId) {
+  setActiveView(view);
   const section = document.querySelector(`#${targetId}`);
   if (!section) return;
   section.scrollIntoView({ behavior: "smooth", block: "start" });
-  setActiveNav(targetId);
 }
 
 function renderChat() {
@@ -258,7 +265,7 @@ function importMessages() {
 
 dom.importBtn.addEventListener("click", importMessages);
 dom.navItems.forEach((item) => {
-  item.addEventListener("click", () => scrollToSection(item.dataset.target));
+  item.addEventListener("click", () => showSection(item.dataset.view, item.dataset.target));
 });
 dom.roleFilter.addEventListener("change", (event) => {
   state.roleFilter = event.target.value;
